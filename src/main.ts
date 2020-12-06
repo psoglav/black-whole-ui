@@ -7,6 +7,7 @@ Vue.config.productionTip = false
 
 import '@/services/registerGlobalComponents'
 import '@/services/registerGlobalProperties'
+import '@/services/registerFaIconComponent'
 
 new Vue({
   router,
