@@ -6,6 +6,7 @@ import store from './store'
 Vue.config.productionTip = false
 
 import '@/services/registerGlobalComponents'
+import '@/services/registerGlobalProperties'
 
 new Vue({
   router,
