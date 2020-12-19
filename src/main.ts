@@ -3,11 +3,9 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-Vue.config.productionTip = false
+import '@/services/registration'
 
-import '@/services/registerGlobalComponents'
-import '@/services/registerGlobalProperties'
-import '@/services/registerFaIconComponent'
+Vue.config.productionTip = false
 
 new Vue({
   router,
