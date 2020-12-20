@@ -11,7 +11,7 @@
     <card title="Time" />
     <card title="Time" />
     <card title="Time" />
-    <card title="Time" />
+    <card title="Time for traveling to Zimbabua" />
     <card title="Time" />
     <card title="Work">
       <fluid-button value="Orders" />

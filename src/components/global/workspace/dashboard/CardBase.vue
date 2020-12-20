@@ -287,13 +287,16 @@ $height: 300px;
 
         &_title {
           width: 100%;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
         }
 
         &_dots {
           position: relative;
           opacity: 0.2;
           transition: opacity 0.2s;
-          margin-right: 15px;
+          margin: 0 15px;
           height: 50%;
           width: 12px;
           display: grid;
