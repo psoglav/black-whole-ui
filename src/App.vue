@@ -11,6 +11,15 @@
 * {
   margin: 0;
   padding: 0;
+  user-select: none;
+}
+
+*::-webkit-scrollbar {
+  background-color: #000;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #111;
 }
 
 p, a, div, span {
@@ -25,6 +34,9 @@ p, a, div, span {
   text-align: center;
   font-size: 16px;
   background-color: #000;
+  background: url('./assets/images/bg001.png');
+  background-size: cover;
+  background-position: center;
 }
 
 body {
