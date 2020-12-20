@@ -55,7 +55,7 @@ export default class CardBase extends Advanced {
   moving = false
   movementDenied = false
   bindings = null
-  dividerOfProximityToSlot = 3.5
+  distanceToChangeSlot = 2
 
   mounted() {
     this.setBindings()
@@ -158,7 +158,7 @@ export default class CardBase extends Advanced {
       const cardy = cardRect.y + card.clientHeight / 2
 
       const d = math.distance([movablex, movabley], [cardx, cardy])
-      const trigger = movable.clientWidth / this.dividerOfProximityToSlot
+      const trigger = movable.clientWidth / this.distanceToChangeSlot
 
       if (d < trigger) {
         this.updateStartPosition()
