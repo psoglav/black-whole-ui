@@ -4,22 +4,18 @@
   </div>
 </template>
 
-<script>
-import { Component, Vue } from 'vue-property-decorator'
-
-@Component
-export default class App extends Vue {}
-</script>
-
 <style lang="scss">
+@import 'scss/_smart-grid.scss';
+@import 'scss/_variables.scss';
+
 * {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
-body {
-  background-color: #000;
+p, a, div, span {
+  color: $plain-text;
+  font-family: Roboto, Montserrat;
 }
 
 #app {
@@ -27,19 +23,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  font-size: 16px;
+  background-color: #000;
 }
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
+body {
+  background-color: $background;
+  overflow: hidden;
 }
 </style>

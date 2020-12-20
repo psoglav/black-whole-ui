@@ -8,11 +8,7 @@ const requireComponent = require.context(
 
 requireComponent.keys().forEach(fileName => {
   const componentConfig = requireComponent(fileName)
-
-  const componentName = fileName
-    .split('/')
-    .pop()
-    .replace(/\.\w+$/, '')
+  const componentName = componentConfig.default.options.name
 
   Vue.component(componentName, componentConfig.default || componentConfig)
 })

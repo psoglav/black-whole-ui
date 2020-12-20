@@ -1,19 +1,37 @@
 <template>
-  <div class="workspace" :style="computedGridStyle"></div>
+  <div class="workspace" :style="computedGridStyle">
+    <actions-panel />
+    <dashboard-panel />
+    <navigation-panel />
+    <profile-panel />
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { workspaceConfig } from '@/config/workspace'
+
+import ActionsPanel from '@/components/workspace/actions/ActionsPanel.vue'
+import DashboardPanel from '@/components/workspace/dashboard/DashboardPanel.vue'
+import NavigationPanel from '@/components/workspace/navigation/NavigationPanel.vue'
+import ProfilePanel from '@/components/workspace/profile/ProfilePanel.vue'
 
 @Component({
-  components: {},
+  components: {
+    ActionsPanel,
+    DashboardPanel,
+    NavigationPanel,
+    ProfilePanel,
+  },
 })
 export default class Workspace extends Vue {
+  get workspaceConfig() {
+    return this.$store.getters['workspaceConfig']
+  }
+  
   get computedGridStyle(): object {
-    const navigation = workspaceConfig.navigation.width
-    const actions = workspaceConfig.actions.width
-    const profile = workspaceConfig.profile.width
+    const navigation = this.workspaceConfig.navigation.width
+    const actions = this.workspaceConfig.actions.width
+    const profile = this.workspaceConfig.profile.width
 
     return {
       'grid-template-columns': `${navigation} 1fr ${profile}`,
@@ -24,7 +42,7 @@ export default class Workspace extends Vue {
 </script>
 
 <style lang="scss" scoped>
-@import '../scss/_variables.scss';
+@import '@/scss/_variables.scss';
 
 .workspace {
   width: 100vw;

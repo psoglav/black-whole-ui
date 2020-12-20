@@ -16,7 +16,7 @@ interface DashboardPanel {
   'min-width': string
 }
 
-interface Workspace {
+export interface WorkspaceConfig {
   actions: ActionsPanel
   navigation: NavigationPanel
   profile: ProfilePanel
