@@ -55,7 +55,7 @@ export default class CardBase extends Advanced {
   moving = false
   movementDenied = false
   bindings = null
-  distanceToChangeSlot = 2
+  distanceToChangeSlot = 3.5
 
   mounted() {
     this.setBindings()
@@ -247,6 +247,7 @@ $height: 300px;
   position: relative;
   height: $height;
   transition: opacity 0.3s;
+  overflow: hidden;
 
   &_new-slot {
     position: absolute;
@@ -265,8 +266,9 @@ $height: 300px;
       position: absolute;
       width: 100%;
       transition: transform 0.3s, box-shadow 0.3s, opacity 0.2s;
-      background-color: #262626;
+      background-color: #26262644;
       border-radius: 5px;
+      backdrop-filter: blur(10px);
 
       &_header {
         width: calc(100% - 20px);
