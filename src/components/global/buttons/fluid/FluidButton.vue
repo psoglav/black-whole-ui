@@ -28,6 +28,7 @@
 <script>
 import * as math from 'mathjs'
 import { Component } from 'vue-property-decorator'
+
 import Advanced from '@/mixins/advanced-component'
 
 @Component({

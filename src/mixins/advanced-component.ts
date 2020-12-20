@@ -23,6 +23,7 @@ export default class Advanced extends Vue {
       return this.$el.querySelectorAll(query.replace(quantity, ''))
     }
   }
+
   $style(query, style) {
     if (typeof style != 'object') {
       this.$el.querySelectorAll(query)?.forEach(el => {
@@ -36,18 +37,22 @@ export default class Advanced extends Vue {
       })
     }
   }
+
   handleMouseDown(e) {
     this.mouse.lButtonPressed = e.button == 0
     this.mouse.rButtonPressed = e.button == 2
   }
+
   handleMouseMove(e) {
     this.mouse.x = e.x
     this.mouse.y = e.y
   }
+
   registerMixinMouseEvents() {
     document.addEventListener('mousedown', this.handleMouseDown)
     document.addEventListener('mousemove', this.handleMouseMove)
   }
+
   removeMixinMouseEvents() {
     document.removeEventListener('mousedown', this.handleMouseDown)
     document.removeEventListener('mousemove', this.handleMouseMove)

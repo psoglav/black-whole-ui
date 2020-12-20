@@ -55,7 +55,7 @@ export default class CardBase extends Advanced {
   moving = false
   movementDenied = false
   bindings = null
-  dividerOfProximityToSlot = 3.5
+  distanceToChangeSlot = 3.5
 
   mounted() {
     this.setBindings()
@@ -158,7 +158,7 @@ export default class CardBase extends Advanced {
       const cardy = cardRect.y + card.clientHeight / 2
 
       const d = math.distance([movablex, movabley], [cardx, cardy])
-      const trigger = movable.clientWidth / this.dividerOfProximityToSlot
+      const trigger = movable.clientWidth / this.distanceToChangeSlot
 
       if (d < trigger) {
         this.updateStartPosition()
@@ -247,6 +247,7 @@ $height: 300px;
   position: relative;
   height: $height;
   transition: opacity 0.3s;
+  overflow: hidden;
 
   &_new-slot {
     position: absolute;
@@ -265,8 +266,9 @@ $height: 300px;
       position: absolute;
       width: 100%;
       transition: transform 0.3s, box-shadow 0.3s, opacity 0.2s;
-      background-color: #262626;
+      background-color: #26262644;
       border-radius: 5px;
+      backdrop-filter: blur(10px);
 
       &_header {
         width: calc(100% - 20px);
