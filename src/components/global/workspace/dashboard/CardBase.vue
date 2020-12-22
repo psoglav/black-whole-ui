@@ -55,7 +55,7 @@ export default class CardBase extends Advanced {
   moving = false
   movementDenied = false
   bindings = null
-  distanceToChangeSlot = 3.5
+  distanceToChangeSlot = 2.2
 
   mounted() {
     this.setBindings()
