@@ -29,6 +29,7 @@ import { Component, Watch } from 'vue-property-decorator'
 import * as math from 'mathjs'
 
 import Advanced from '@/mixins/advanced-component'
+import { Log } from '@/services/decorators'
 
 @Component({
   name: 'card',
@@ -78,6 +79,7 @@ export default class CardBase extends Advanced {
     this.bindings = set
   }
 
+  @Log
   insertCard() {
     this.movementDenied = true
 
