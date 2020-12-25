@@ -2,7 +2,7 @@
   <div class="card">
     <div class="card_new-slot"></div>
     <div class="card_slot">
-      <div class="card_slot-movable">
+      <div class="card_slot-movable" :id="id">
         <div class="card_slot-movable_header">
           <div class="card_slot-movable_header_title">{{ title }}</div>
           <div
@@ -27,9 +27,11 @@
 <script>
 import { Component, Watch } from 'vue-property-decorator'
 import * as math from 'mathjs'
+import { nanoid } from 'nanoid'
 
 import Advanced from '@/mixins/advanced-component'
 import { Log } from '@/services/decorators'
+
 
 @Component({
   name: 'card',
@@ -47,16 +49,21 @@ export default class CardBase extends Advanced {
     }
   }
 
+  id = nanoid()
+
   mx = 0
   my = 0
   startx = 0
   starty = 0
   dx = 0
   dy = 0
+
   moving = false
   movementDenied = false
+
   bindings = null
-  distanceToChangeSlot = 2.2
+
+  distanceToChangeSlot = 2.5
 
   mounted() {
     this.setBindings()
@@ -68,9 +75,11 @@ export default class CardBase extends Advanced {
       card: this.$el,
       slot: this.$('.card_slot'),
       newSlot: this.$('.card_new-slot'),
-      movable: this.$('.card_slot-movable'),
+      movable: document.querySelector(`.card_slot-movable#${this.id}`),
       header: this.$('.card_slot-movable_header'),
       dots: this.$('.card_slot-movable_header_dots'),
+      app: document.querySelector('#app'),
+      workspace: this.$el.parentNode.parentNode
     }
 
     set.movableRect = set.movable.getBoundingClientRect()
@@ -122,25 +131,34 @@ export default class CardBase extends Advanced {
   }
 
   detachCard() {
+    const bs = this.bindings
+
     this.updateStartPosition()
 
-    this.dx = this.mx - this.bindings.movableRect.x
-    this.dy = this.my - this.bindings.movableRect.y
+    // detaching movable element from CardsPocket
+    // and inserting it to the app
+    const movable = bs.slot.removeChild(bs.movable)
+    bs.app.insertBefore(movable, bs.workspace)
 
-    this.bindings.card.style.position = 'initial'
-    this.bindings.slot.style.position = 'initial'
-    this.bindings.slot.style.cursor = 'move'
-    this.bindings.newSlot.style.width = this.bindings.card.clientWidth + 'px'
-    this.bindings.newSlot.style.height = this.bindings.card.clientHeight + 'px'
-    this.bindings.newSlot.style.top = this.starty + 'px'
-    this.bindings.header.style.cursor = 'move'
-    this.bindings.dots.style.opacity = 1
-    this.bindings.movable.style.transform = 'scale(1.03)'
-    this.bindings.movable.style.width = this.bindings.slot.clientWidth + 'px'
-    this.bindings.movable.style['box-shadow'] = '0 0 35px #00000077'
-    this.bindings.movable.style['z-index'] = 10
-    this.bindings.movable.style.left = this.startx + 'px'
-    this.bindings.movable.style.top = this.starty + 'px'
+    this.setBindings()
+
+    this.dx = this.mx - bs.movableRect.x
+    this.dy = this.my - bs.movableRect.y
+
+    bs.card.style.position = 'initial'
+    bs.slot.style.position = 'initial'
+    bs.slot.style.cursor = 'move'
+    bs.newSlot.style.width = bs.card.clientWidth + 'px'
+    bs.newSlot.style.height = bs.card.clientHeight + 'px'
+    bs.newSlot.style.top = this.starty + 'px'
+    bs.header.style.cursor = 'move'
+    bs.dots.style.opacity = 1
+    bs.movable.style.transform = 'scale(1.03)'
+    bs.movable.style.width = bs.slot.clientWidth + 'px'
+    bs.movable.style['box-shadow'] = '0 0 35px #00000077'
+    bs.movable.style['z-index'] = 10
+    bs.movable.style.left = this.startx + 'px'
+    bs.movable.style.top = this.starty + 'px'
   }
 
   changingOrder() {
@@ -148,7 +166,7 @@ export default class CardBase extends Advanced {
 
     const { movableRect, movable } = this.bindings
 
-    const cards = document.querySelectorAll('.card')
+    const cards = this.$parent.$el.querySelectorAll('.card')
 
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i]
