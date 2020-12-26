@@ -4,23 +4,23 @@
       <fluid-button
         @click="
           () => {
-            this.workspaceConfig.profile.sizable = !this.workspaceConfig.profile
+            this.workspaceConfig.panels.profile.sizable = !this.workspaceConfig.panels.profile
               .sizable
           }
         "
         width="50%"
-        :message="!workspaceConfig.profile.sizable ? 'Option on' : 'Option off'"
+        :message="!workspaceConfig.panels.profile.sizable ? 'Option on' : 'Option off'"
         :triggers="{
           left: {
             name: 'Off',
             action: () => {
-              workspaceConfig.profile.sizable = false
+              workspaceConfig.panels.profile.sizable = false
             },
           },
           right: {
             name: 'On',
             action: () => {
-              workspaceConfig.profile.sizable = true
+              workspaceConfig.panels.profile.sizable = true
             },
           },
         }"

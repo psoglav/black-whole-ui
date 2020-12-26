@@ -29,9 +29,9 @@ export default class Workspace extends Vue {
   }
   
   get computedGridStyle(): object {
-    const navigation = this.workspaceConfig.navigation.width
-    const actions = this.workspaceConfig.actions.width
-    const profile = this.workspaceConfig.profile.width
+    const navigation = this.workspaceConfig.panels.navigation.width
+    const actions = this.workspaceConfig.panels.actions.width
+    const profile = this.workspaceConfig.panels.profile.width
 
     return {
       'grid-template-columns': `${navigation} 1fr ${profile}`,

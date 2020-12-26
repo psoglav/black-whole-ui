@@ -16,7 +16,7 @@ import { Component, Vue } from 'vue-property-decorator'
     resizing() {
       document.body.style.cursor = this.resizing ? 'col-resize' : 'default'
     },
-    'workspaceConfig.profile.sizable': 'registerResize',
+    'workspaceConfig.panels.profile.sizable': 'registerResize',
   },
 })
 export default class ProfilePanel extends Vue {
@@ -25,7 +25,7 @@ export default class ProfilePanel extends Vue {
   }
 
   mounted() {
-    this.registerResize(this.workspaceConfig.profile.sizable)
+    this.registerResize(this.workspaceConfig.panels.profile.sizable)
   }
 
   resize(x) {
@@ -33,9 +33,9 @@ export default class ProfilePanel extends Vue {
     const pixels = screenw - x
     const rem = pixels / 16
 
-    let minDashboardWidth = this.workspaceConfig.dashboard['min-width']
-    let navigationWidth = this.workspaceConfig.navigation.width
-    let minProfileWidth = this.workspaceConfig.profile['min-width']
+    let minDashboardWidth = this.workspaceConfig.panels.dashboard['min-width']
+    let navigationWidth = this.workspaceConfig.panels.navigation.width
+    let minProfileWidth = this.workspaceConfig.panels.profile['min-width']
 
     minDashboardWidth = +minDashboardWidth.replace('rem', '')
     minProfileWidth = +minProfileWidth.replace('rem', '')
@@ -44,11 +44,11 @@ export default class ProfilePanel extends Vue {
     if (rem < minProfileWidth) return
     else if ((navigationWidth + minDashboardWidth) * 16 > x) return
 
-    this.workspaceConfig.profile.width = rem + 'rem'
+    this.workspaceConfig.panels.profile.width = rem + 'rem'
   }
 
   handleMouseDown(e) {
-    if (!this.workspaceConfig.profile.sizable) return
+    if (!this.workspaceConfig.panels.profile.sizable) return
 
     if (e.target.classList && e.target.classList.contains('panel_resize')) {
       this.resizing = true
@@ -56,7 +56,7 @@ export default class ProfilePanel extends Vue {
   }
 
   handleMouseMove(e) {
-    if (!this.workspaceConfig.profile.sizable) return
+    if (!this.workspaceConfig.panels.profile.sizable) return
 
     if (this.resizing) {
       this.resize(e.x)
@@ -70,7 +70,7 @@ export default class ProfilePanel extends Vue {
   }
 
   handleMouseUp() {
-    if (!this.workspaceConfig.profile.sizable) return
+    if (!this.workspaceConfig.panels.profile.sizable) return
 
     document.body.style.cursor = 'default'
     this.resizing = false

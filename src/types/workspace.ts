@@ -17,8 +17,10 @@ interface DashboardPanel {
 }
 
 export interface WorkspaceConfig {
-  actions: ActionsPanel
-  navigation: NavigationPanel
-  profile: ProfilePanel
-  dashboard: DashboardPanel
+  panels: {
+    actions: ActionsPanel
+    navigation: NavigationPanel
+    profile: ProfilePanel
+    dashboard: DashboardPanel
+  }
 }
