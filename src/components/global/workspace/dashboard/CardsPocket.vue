@@ -12,8 +12,26 @@ import { Component, Vue } from 'vue-property-decorator'
 })
 export default class CardsPocket extends Vue {
 
+  created() {
+    this.$root.$on('card-detached', this.onCardDetached)
+    this.$root.$on('card-inserted', this.onCardInserted)
+  }
+
   mounted() {
-    console.log('cardsPocket')
+    // console.log(this.$slots)
+  }
+
+  beforeDestroy() {
+    this.$root.$off('card-detached', this.onCardDetached)
+    this.$root.$off('card-inserted', this.onCardInserted)
+  }
+
+  onCardDetached(id) {
+    console.log(id)
+  }
+
+  onCardInserted(id) {
+    console.log(id)
   }
 }
 </script>

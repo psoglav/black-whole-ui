@@ -1,8 +1,8 @@
 <template>
-  <div class="card">
+  <div class="card" @mouseover="mouseOverHandler">
     <div class="card_new-slot"></div>
     <div class="card_slot">
-      <div class="card_slot-movable" :id="id">
+      <div class="card_slot-movable" :class="{ ready }" :id="id">
         <div class="card_slot-movable_header" :style="movableHeaderStyle">
           <div class="card_slot-movable_header_title">{{ title }}</div>
           <div
@@ -25,7 +25,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { Component, Watch } from 'vue-property-decorator'
 import { customAlphabet } from 'nanoid'
 import * as math from 'mathjs'
@@ -56,6 +56,10 @@ export default class CardBase extends Advanced {
     if (need) this.update()
   }
 
+  mouseOverHandler() {
+    this.$root.$emit('card-over', this.id)
+  }
+
   //#region DATA
 
   id = customAlphabet('abcdefghijklmnopqrstuvwxyz', 25)()
@@ -69,6 +73,8 @@ export default class CardBase extends Advanced {
   dy = 0
 
   moving = false
+  elseCardIsMoving = false
+  ready = false
   scrolling = false
   movementDenied = false
   needInUpdate = false
@@ -78,10 +84,6 @@ export default class CardBase extends Advanced {
   distanceToChangeSlot = 2.5
 
   //#endregion
-
-  created() {
-    this.registerMixinMouseEvents()
-  }
 
   get cardConfig() {
     return this.$store.getters['workspaceConfig'].card
@@ -93,6 +95,14 @@ export default class CardBase extends Advanced {
     return {
       cursor: cursorStyle == 1 ? 'pointer' : 'grab',
     }
+  }
+
+  created() {
+    this.registerMixinMouseEvents()
+
+    this.$root.$on('card-over', this.readyToReplace)
+    this.$root.$on('card-detached', this.elseCardDetached)
+    this.$root.$on('card-inserted', this.elseCardInserted)
   }
 
   mounted() {
@@ -108,61 +118,93 @@ export default class CardBase extends Advanced {
 
   beforeDestroy() {
     this.removeMixinMouseEvents()
+
+    this.$root.$off('card-over', this.readyToReplace)
+    this.$root.$off('card-detached', this.elseCardDetached)
+    this.$root.$off('card-inserted', this.elseCardInserted)
   }
 
   setBindings() {
+    const movable = document.querySelector(`.card_slot-movable#${this.id}`)
     const set = {
       card: this.$el,
       slot: this.$('.card_slot'),
       newSlot: this.$('.card_new-slot'),
-      movable: document.querySelector(`.card_slot-movable#${this.id}`),
+      movable,
       header: this.$('.card_slot-movable_header'),
       dots: this.$('.card_slot-movable_header_dots'),
       app: document.querySelector('#app'),
       workspace: document.querySelector('.workspace'),
+      movableRect: movable.getBoundingClientRect(),
+      cardRect: this.$el.getBoundingClientRect(),
     }
-
-    set.movableRect = set.movable.getBoundingClientRect()
-    set.cardRect = set.card.getBoundingClientRect()
 
     this.bindings = set
   }
 
+  elseCardInserted() {
+    this.elseCardIsMoving = false
+  }
+
+  elseCardDetached() {
+    this.elseCardIsMoving = true
+  }
+
+  readyToReplace(id) {
+    // turn it off on unfocused cards
+    this.ready = false
+
+    if (this.id != id) return
+    else if (this.id == id && this.moving) return
+    else if (!this.elseCardIsMoving) return
+
+    // and opposite on focused card
+    this.ready = true
+
+    console.log(id, 'is ready to replace')
+  }
+
   @Log
   insertCard() {
+    const bs = this.bindings
+
+    this.$root.$emit('card-inserted', this.id)
+
     this.movementDenied = true
 
     this.updateStartPosition()
 
-    this.bindings.slot.style.cursor = 'default'
-    this.bindings.header.style.cursor = 'pointer'
-    this.bindings.movable.style.transition =
+    bs.slot.style.cursor = 'default'
+    bs.header.style.cursor = 'pointer'
+    bs.movable.style.transition =
       'transform .3s, box-shadow .3s, top .3s, left .3s'
-    this.bindings.movable.style.top = this.starty + 'px'
-    this.bindings.movable.style.left = this.startx + 'px'
-    this.bindings.newSlot.style.top = this.starty + 'px'
+    bs.movable.style.top = this.starty + 'px'
+    bs.movable.style.left = this.startx + 'px'
+    bs.newSlot.style.top = this.starty + 'px'
 
     setTimeout(() => {
       this.movementDenied = false
 
-      this.bindings.movable.style.transition = 'transform 0.3s, box-shadow 0.3s'
-      this.bindings.newSlot.style.width = '100%'
-      this.bindings.newSlot.style.top = 0
-      this.bindings.movable.style.top = 0
-      this.bindings.movable.style.left = 0
-      this.bindings.dots.style.opacity = ''
-      this.bindings.card.style.position = 'relative'
-      this.bindings.slot.style.position = 'relative'
-      this.bindings.movable.style.transform = ''
-      this.bindings.movable.style.width = '100%'
-      this.bindings.movable.style['box-shadow'] = 'none'
-      this.bindings.movable.style['z-index'] = 0
-      this.bindings.movable.style.opacity = 1
+      bs.movable.style.transition = 'transform 0.3s, box-shadow 0.3s'
+      bs.newSlot.style.width = '100%'
+      bs.newSlot.style.top = 0
+      bs.movable.style.top = 0
+      bs.movable.style.left = 0
+      bs.dots.style.opacity = ''
+      bs.card.style.position = 'relative'
+      bs.slot.style.position = 'relative'
+      bs.movable.style.transform = ''
+      bs.movable.style.width = '100%'
+      bs.movable.style['box-shadow'] = 'none'
+      bs.movable.style['z-index'] = 0
+      bs.movable.style.opacity = 1
     }, 300)
   }
 
   detachCard() {
     const bs = this.bindings
+
+    this.$root.$emit('card-detached', this.id)
 
     this.updateStartPosition()
     this.updateCursor()
@@ -180,39 +222,28 @@ export default class CardBase extends Advanced {
     bs.movable.style.width = bs.slot.clientWidth + 'px'
     bs.movable.style['box-shadow'] = '0 0 35px #00000077'
     bs.movable.style['z-index'] = 10
+    bs.movable.style['pointer-events'] = 'none'
     bs.movable.style.transform = 'scale(1.03)'
     bs.movable.style.left = this.startx + 'px'
     bs.movable.style.top = this.starty + 'px'
   }
 
+  // FIX: doesnt work properly because of pointer-events turned off
   updateCursor() {
     let cursorStyle
 
-    if (this.moving) {
-      switch (this.cardConfig.cursorGrabStyle) {
-        case 1:
-          cursorStyle = 'move'
-          break
-        case 2:
-          cursorStyle = 'grabbing'
-          break
-      }
-
-      this.bindings.header.style.cursor = cursorStyle
-      this.bindings.dots.style.cursor = cursorStyle
-    } else {
-      switch (this.cardConfig.cursorGrabStyle) {
-        case 1:
-          cursorStyle = 'pointer'
-          break
-        case 2:
-          cursorStyle = 'grab'
-          break
-      }
-
-      this.bindings.header.style.cursor = cursorStyle
-      this.bindings.dots.style.cursor = cursorStyle
+    switch (this.cardConfig.cursorGrabStyle) {
+      case 1:
+        cursorStyle = this.moving ? 'move' : 'pointer'
+        break
+      case 2:
+        cursorStyle = this.moving ? 'grabbing' : 'grab'
+        break
     }
+
+    this.bindings.header.style.cursor = cursorStyle
+    this.bindings.dots.style.cursor = cursorStyle
+    // document.body.style.cursor = cursorStyle
   }
 
   getIndex(el) {
@@ -362,6 +393,11 @@ $height: 300px;
       background-color: #26262644;
       border-radius: 5px;
       backdrop-filter: blur(10px);
+
+      &.ready {
+        opacity: 0.65;
+        transform: translateY(30px);
+      }
 
       &_header {
         width: calc(100% - 20px);
