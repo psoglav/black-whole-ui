@@ -2,6 +2,9 @@ import { WorkspaceConfig } from '@/types/workspace'
 
 const state = {
   config: {
+    card: {
+      cursorGrabStyle: 1
+    },
     panels: {
       actions: {
         width: '5rem',

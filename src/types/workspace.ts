@@ -17,6 +17,10 @@ interface DashboardPanel {
 }
 
 export interface WorkspaceConfig {
+  card: {
+    cursorGrabStyle: 1 | 2
+  }
+
   panels: {
     actions: ActionsPanel
     navigation: NavigationPanel

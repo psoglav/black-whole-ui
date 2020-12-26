@@ -3,10 +3,11 @@
     <div class="card_new-slot"></div>
     <div class="card_slot">
       <div class="card_slot-movable" :id="id">
-        <div class="card_slot-movable_header">
+        <div class="card_slot-movable_header" :style="movableHeaderStyle">
           <div class="card_slot-movable_header_title">{{ title }}</div>
           <div
-            :class="['card_slot-movable_header_dots', moving ? 'active' : '']"
+            class="card_slot-movable_header_dots"
+            :class="{ active: moving }"
           >
             <div></div>
             <div></div>
@@ -26,12 +27,11 @@
 
 <script>
 import { Component, Watch } from 'vue-property-decorator'
+import { customAlphabet } from 'nanoid'
 import * as math from 'mathjs'
-import { nanoid } from 'nanoid'
 
 import Advanced from '@/mixins/advanced-component'
 import { Log } from '@/services/decorators'
-
 
 @Component({
   name: 'card',
@@ -43,31 +43,71 @@ export default class CardBase extends Advanced {
   @Watch('moving')
   onMovingChanged(moving) {
     if (moving) {
+      this.needInUpdate = true
       this.detachCard()
     } else {
+      this.needInUpdate = false
       this.insertCard()
     }
   }
 
-  id = nanoid()
+  @Watch('needInUpdate')
+  updateWatcher(need) {
+    if (need) this.update()
+  }
+
+  //#region DATA
+
+  id = customAlphabet('abcdefghijklmnopqrstuvwxyz', 25)()
 
   mx = 0
   my = 0
   startx = 0
   starty = 0
+  startYScroll = 0
   dx = 0
   dy = 0
 
   moving = false
+  scrolling = false
   movementDenied = false
+  needInUpdate = false
 
   bindings = null
 
   distanceToChangeSlot = 2.5
 
+  //#endregion
+
+  created() {
+    this.registerMixinMouseEvents()
+  }
+
+  get cardConfig() {
+    return this.$store.getters['workspaceConfig'].card
+  }
+
+  get movableHeaderStyle() {
+    const cursorStyle = this.cardConfig.cursorGrabStyle
+
+    return {
+      cursor: cursorStyle == 1 ? 'pointer' : 'grab',
+    }
+  }
+
   mounted() {
     this.setBindings()
     this.registerEvents()
+  }
+
+  update() {
+    this.keepCardInView()
+
+    if (this.needInUpdate) requestAnimationFrame(this.update)
+  }
+
+  beforeDestroy() {
+    this.removeMixinMouseEvents()
   }
 
   setBindings() {
@@ -79,7 +119,7 @@ export default class CardBase extends Advanced {
       header: this.$('.card_slot-movable_header'),
       dots: this.$('.card_slot-movable_header_dots'),
       app: document.querySelector('#app'),
-      workspace: this.$el.parentNode.parentNode
+      workspace: document.querySelector('.workspace'),
     }
 
     set.movableRect = set.movable.getBoundingClientRect()
@@ -121,6 +161,60 @@ export default class CardBase extends Advanced {
     }, 300)
   }
 
+  detachCard() {
+    const bs = this.bindings
+
+    this.updateStartPosition()
+    this.updateCursor()
+
+    // detaching movable element from this card slot
+    // and inserting it to the app
+    bs.app.insertBefore(bs.slot.removeChild(bs.movable), bs.workspace)
+
+    this.setBindings()
+
+    this.dx = this.mx - bs.movableRect.x
+    this.dy = this.my - bs.movableRect.y
+    this.startYScroll = this.$parent.$el.scrollTop
+
+    bs.movable.style.width = bs.slot.clientWidth + 'px'
+    bs.movable.style['box-shadow'] = '0 0 35px #00000077'
+    bs.movable.style['z-index'] = 10
+    bs.movable.style.transform = 'scale(1.03)'
+    bs.movable.style.left = this.startx + 'px'
+    bs.movable.style.top = this.starty + 'px'
+  }
+
+  updateCursor() {
+    let cursorStyle
+
+    if (this.moving) {
+      switch (this.cardConfig.cursorGrabStyle) {
+        case 1:
+          cursorStyle = 'move'
+          break
+        case 2:
+          cursorStyle = 'grabbing'
+          break
+      }
+
+      this.bindings.header.style.cursor = cursorStyle
+      this.bindings.dots.style.cursor = cursorStyle
+    } else {
+      switch (this.cardConfig.cursorGrabStyle) {
+        case 1:
+          cursorStyle = 'pointer'
+          break
+        case 2:
+          cursorStyle = 'grab'
+          break
+      }
+
+      this.bindings.header.style.cursor = cursorStyle
+      this.bindings.dots.style.cursor = cursorStyle
+    }
+  }
+
   getIndex(el) {
     if (!el) return -1
     let i = 0
@@ -130,39 +224,8 @@ export default class CardBase extends Advanced {
     return i
   }
 
-  detachCard() {
-    const bs = this.bindings
-
-    this.updateStartPosition()
-
-    // detaching movable element from CardsPocket
-    // and inserting it to the app
-    const movable = bs.slot.removeChild(bs.movable)
-    bs.app.insertBefore(movable, bs.workspace)
-
-    this.setBindings()
-
-    this.dx = this.mx - bs.movableRect.x
-    this.dy = this.my - bs.movableRect.y
-
-    bs.card.style.position = 'initial'
-    bs.slot.style.position = 'initial'
-    bs.slot.style.cursor = 'move'
-    bs.newSlot.style.width = bs.card.clientWidth + 'px'
-    bs.newSlot.style.height = bs.card.clientHeight + 'px'
-    bs.newSlot.style.top = this.starty + 'px'
-    bs.header.style.cursor = 'move'
-    bs.dots.style.opacity = 1
-    bs.movable.style.transform = 'scale(1.03)'
-    bs.movable.style.width = bs.slot.clientWidth + 'px'
-    bs.movable.style['box-shadow'] = '0 0 35px #00000077'
-    bs.movable.style['z-index'] = 10
-    bs.movable.style.left = this.startx + 'px'
-    bs.movable.style.top = this.starty + 'px'
-  }
-
   changingOrder() {
-    this.setBindings()
+    // this.setBindings()
 
     const { movableRect, movable } = this.bindings
 
@@ -199,18 +262,11 @@ export default class CardBase extends Advanced {
   }
 
   move(e) {
-    this.setBindings()
+    const x = e.x - this.dx
+    const y = e.y - this.dy - this.startYScroll
 
-    this.bindings.movable.style.top = e.y - this.dy + 'px'
-    this.bindings.movable.style.left = e.x - this.dx + 'px'
-  }
-
-  scroll() {
-    this.updateStartPosition()
-
-    this.bindings.movable.style.top = this.starty + 'px'
-    this.bindings.movable.style.left = this.startx + 'px'
-    this.bindings.newSlot.style.top = this.starty + 'px'
+    this.bindings.movable.style.top = y + 'px'
+    this.bindings.movable.style.left = x + 'px'
   }
 
   updateStartPosition() {
@@ -220,8 +276,26 @@ export default class CardBase extends Advanced {
     this.starty = this.bindings.cardRect.y
   }
 
-  maintainCardInView(e) {
-    if (e.y < 200) this.$parent.$el.scrollTop--
+  keepCardInView() {
+    const my = this.mouse.y
+    const multiplier = 2.5
+
+    let Yacceleration = 200 / my
+
+    if (my < 50) {
+      Yacceleration = 200 / 50
+    } else if (my > window.innerHeight - 150) {
+      Yacceleration = 200 / -50
+    } else if (my > window.innerHeight - 200) {
+      Yacceleration = 200 / -(window.innerHeight - my)
+    }
+
+    if (my < 200 || my > window.innerHeight - 200) {
+      this.scrolling = true
+      this.$parent.$el.scrollTop -= Yacceleration * multiplier
+    } else {
+      this.scrolling = false
+    }
   }
 
   registerEvents() {
@@ -237,8 +311,7 @@ export default class CardBase extends Advanced {
 
     document.addEventListener('mousemove', e => {
       if (this.moving) {
-        this.maintainCardInView(e)
-        this.changingOrder()
+        // this.changingOrder()
         this.move(e)
       }
     })
@@ -299,7 +372,6 @@ $height: 300px;
         align-items: center;
         user-select: none;
         text-align: left;
-        cursor: pointer;
 
         &:hover &_dots {
           opacity: 1;
@@ -376,6 +448,8 @@ $height: 300px;
         }
 
         &_dots.active {
+          opacity: 1;
+
           div {
             top: 50%;
             left: 50%;
