@@ -1,8 +1,16 @@
 <template>
-  <div class="card" @mouseover="mouseOverHandler">
-    <div class="card_new-slot"></div>
-    <div class="card_slot">
-      <div class="card_slot-movable" :class="{ ready }" :id="id">
+  <div
+    class="card"
+    @mouseover="mouseOverHandler"
+    @mouseleave="mouseLeaveHandler"
+  >
+    <div class="card_back"></div>
+    <div :class="['card_slot', 'parent_' + id]">
+      <div
+        class="card_slot-movable"
+        :class="{ 'ready-remove': readyRemove }"
+        :id="id"
+      >
         <div class="card_slot-movable_header" :style="movableHeaderStyle">
           <div class="card_slot-movable_header_title">{{ title }}</div>
           <div
@@ -28,7 +36,6 @@
 <script lang="ts">
 import { Component, Watch } from 'vue-property-decorator'
 import { customAlphabet } from 'nanoid'
-import * as math from 'mathjs'
 
 import Advanced from '@/mixins/advanced-component'
 import { Log } from '@/services/decorators'
@@ -57,7 +64,14 @@ export default class CardBase extends Advanced {
   }
 
   mouseOverHandler() {
-    this.$root.$emit('card-over', this.id)
+    this.$root.$emit('over-card', this.id)
+  }
+
+  mouseLeaveHandler() {
+    if (this.readyRemove) {
+      this.$root.$emit('card-unfocused', this.id)
+      this.readyRemove = false
+    }
   }
 
   //#region DATA
@@ -74,12 +88,13 @@ export default class CardBase extends Advanced {
 
   moving = false
   elseCardIsMoving = false
-  ready = false
+  readyRemove = false
   scrolling = false
   movementDenied = false
   needInUpdate = false
 
   bindings = null
+  replacementNode = null
 
   distanceToChangeSlot = 2.5
 
@@ -100,7 +115,8 @@ export default class CardBase extends Advanced {
   created() {
     this.registerMixinMouseEvents()
 
-    this.$root.$on('card-over', this.readyToReplace)
+    this.$root.$on('over-card', this.readyToReplace)
+    this.$root.$on('card-unfocused', this.readyCardUnfocused)
     this.$root.$on('card-detached', this.elseCardDetached)
     this.$root.$on('card-inserted', this.elseCardInserted)
   }
@@ -119,7 +135,8 @@ export default class CardBase extends Advanced {
   beforeDestroy() {
     this.removeMixinMouseEvents()
 
-    this.$root.$off('card-over', this.readyToReplace)
+    this.$root.$off('over-card', this.readyToReplace)
+    this.$root.$off('card-unfocused', this.readyCardUnfocused)
     this.$root.$off('card-detached', this.elseCardDetached)
     this.$root.$off('card-inserted', this.elseCardInserted)
   }
@@ -129,7 +146,6 @@ export default class CardBase extends Advanced {
     const set = {
       card: this.$el,
       slot: this.$('.card_slot'),
-      newSlot: this.$('.card_new-slot'),
       movable,
       header: this.$('.card_slot-movable_header'),
       dots: this.$('.card_slot-movable_header_dots'),
@@ -150,55 +166,108 @@ export default class CardBase extends Advanced {
     this.elseCardIsMoving = true
   }
 
-  readyToReplace(id) {
-    // turn it off on unfocused cards
-    this.ready = false
+  removeMovableReplacements() {
+    const existing = this.$el.querySelectorAll('.ready-append')
+    const hiddenExisting = this.$el.querySelectorAll('.hidden')
 
-    if (this.id != id) return
-    else if (this.id == id && this.moving) return
-    else if (!this.elseCardIsMoving) return
+    if (existing.length) {
+      existing.forEach(el => {
+        this.bindings.slot.removeChild(el)
+      })
+    }
 
-    // and opposite on focused card
-    this.ready = true
-
-    console.log(id, 'is ready to replace')
+    if (hiddenExisting.length) {
+      hiddenExisting.forEach(el => {
+        this.bindings.slot.removeChild(el)
+      })
+    }
   }
 
-  @Log
+  readyToReplace(id) {
+    if (this.moving && this.id != id) {
+      this.removeMovableReplacements()
+
+      let replacement = document.querySelector('.card_slot-movable#' + id)
+      this.replacementNode = replacement
+      replacement = replacement.cloneNode(true) as Element
+      replacement.classList.remove('ready-remove')
+      replacement.classList.add('hidden')
+
+      setTimeout(() => {
+        replacement.classList.remove('hidden')
+        replacement.classList.add('ready-append')
+      }, 5)
+
+      this.bindings.slot.appendChild(replacement)
+    }
+
+    // turn it off on unfocused cards
+    this.readyRemove = false
+
+    if (
+      this.id != id || // when it's the same card
+      !this.elseCardIsMoving || // when no cards is being moved
+      (this.id == id && this.moving) // when it's the card which user is moving
+    ) {
+      return
+    }
+
+    // and opposite on focused card
+    this.readyRemove = true
+  }
+
+  readyCardUnfocused() {
+    const existing = this.$el.querySelector('.ready-append')
+
+    if (existing) {
+      existing.classList.remove('ready-append')
+      existing.classList.add('hidden')
+    }
+  }
+
   insertCard() {
     const bs = this.bindings
 
     this.$root.$emit('card-inserted', this.id)
 
-    this.movementDenied = true
+    this.mx = 0
+    this.my = 0
+    this.dx = 0
+    this.dy = 0
 
-    this.updateStartPosition()
+    // this.updateStartPosition()
 
-    bs.slot.style.cursor = 'default'
-    bs.header.style.cursor = 'pointer'
-    bs.movable.style.transition =
-      'transform .3s, box-shadow .3s, top .3s, left .3s'
-    bs.movable.style.top = this.starty + 'px'
-    bs.movable.style.left = this.startx + 'px'
-    bs.newSlot.style.top = this.starty + 'px'
+    // this.movementDenied = true
 
-    setTimeout(() => {
-      this.movementDenied = false
+    if (this.replacementNode) {
+      const replacementParent = this.replacementNode.parentNode
 
-      bs.movable.style.transition = 'transform 0.3s, box-shadow 0.3s'
-      bs.newSlot.style.width = '100%'
-      bs.newSlot.style.top = 0
-      bs.movable.style.top = 0
-      bs.movable.style.left = 0
-      bs.dots.style.opacity = ''
-      bs.card.style.position = 'relative'
-      bs.slot.style.position = 'relative'
-      bs.movable.style.transform = ''
-      bs.movable.style.width = '100%'
-      bs.movable.style['box-shadow'] = 'none'
-      bs.movable.style['z-index'] = 0
-      bs.movable.style.opacity = 1
-    }, 300)
+      const thisId = this.id
+      const replacementId = replacementParent.classList[1].split('_')[1]
+
+      bs.movable.id = replacementId
+      this.replacementNode.id = thisId
+      replacementParent.removeChild(this.replacementNode)
+      replacementParent.appendChild(bs.movable)
+      this.replacementNode = null
+
+      const replacementMovableClone = this.$el.querySelector('.ready-append')
+
+      replacementMovableClone.classList.remove('ready-append')
+      // this.removeMovableReplacements()
+    } else {
+      bs.slot.appendChild(bs.movable)
+    }
+
+    this.setBindings()
+
+    bs.movable.style.transition = 'transform .3s, box-shadow .3s'
+    bs.movable.style.top = ''
+    bs.movable.style.left = ''
+    bs.movable.style['z-index'] = 1
+    bs.movable.style['pointer-events'] = 'all'
+    bs.movable.style.transform = ''
+    bs.movable.style.width = '100%'
   }
 
   detachCard() {
@@ -255,43 +324,6 @@ export default class CardBase extends Advanced {
     return i
   }
 
-  changingOrder() {
-    // this.setBindings()
-
-    const { movableRect, movable } = this.bindings
-
-    const cards = this.$parent.$el.querySelectorAll('.card')
-
-    for (let i = 0; i < cards.length; i++) {
-      const card = cards[i]
-      const cardRect = card.getBoundingClientRect()
-
-      const movablex = movableRect.x + movable.clientWidth / 2
-      const movabley = movableRect.y + movable.clientHeight / 2
-      const cardx = cardRect.x + card.clientWidth / 2
-      const cardy = cardRect.y + card.clientHeight / 2
-
-      const d = math.distance([movablex, movabley], [cardx, cardy])
-      const trigger = movable.clientWidth / this.distanceToChangeSlot
-
-      if (d < trigger) {
-        this.updateStartPosition()
-        this.bindings.newSlot.style.top = this.starty + 'px'
-
-        if (this.$el != card) {
-          let replacement = card.nextSibling
-
-          if (this.getIndex(card) < this.getIndex(this.$el)) {
-            replacement = card
-          }
-
-          this.$parent.$el.insertBefore(this.$el, replacement)
-          break
-        }
-      }
-    }
-  }
-
   move(e) {
     const x = e.x - this.dx
     const y = e.y - this.dy - this.startYScroll
@@ -342,7 +374,6 @@ export default class CardBase extends Advanced {
 
     document.addEventListener('mousemove', e => {
       if (this.moving) {
-        // this.changingOrder()
         this.move(e)
       }
     })
@@ -354,12 +385,6 @@ export default class CardBase extends Advanced {
     document.addEventListener('keydown', () => {
       this.moving = false
     })
-
-    // this.$parent.$el.addEventListener('scroll', () => {
-    // if (this.moving) {
-    // this.scroll()
-    // }
-    // })
   }
 }
 </script>
@@ -373,7 +398,7 @@ $height: 300px;
   transition: opacity 0.3s;
   overflow: hidden;
 
-  &_new-slot {
+  &_back {
     position: absolute;
     pointer-events: none;
     border-radius: 5px;
@@ -394,9 +419,21 @@ $height: 300px;
       border-radius: 5px;
       backdrop-filter: blur(10px);
 
-      &.ready {
-        opacity: 0.65;
-        transform: translateY(30px);
+      &.ready-remove {
+        // opacity: 0.65;
+        // filter: blur(5px);
+        // backdrop-filter: none;
+        transform: translateY(10%);
+      }
+
+      &.ready-append {
+        // opacity: 0.65;
+        transform: translateY(-90%);
+      }
+
+      &.hidden {
+        // // opacity: 0.65;
+        transform: translateY(-100%);
       }
 
       &_header {
