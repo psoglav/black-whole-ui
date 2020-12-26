@@ -1,8 +1,8 @@
 <template>
   <div class="fluid-button" @click="action">
     <div class="fluid-button_slider" :class="{ selective }">
-      <h3 class="fluid-button_slider_value">
-        <fa icon="bullhorn" v-if="messageIsVisible" /> {{ text || value }}
+      <h3 class="fluid-button_slider_label">
+        <fa icon="bullhorn" v-if="messageIsVisible" /> {{ text || label }}
       </h3>
       <div class="fluid-button_slider_order">
         <div
@@ -33,7 +33,7 @@ import Advanced from '@/mixins/advanced-component'
 
 @Component({
   props: {
-    value: {
+    label: {
       type: String,
       default: 'Untitled',
     },
@@ -140,7 +140,7 @@ export default class FluidButton extends Advanced {
 
   mounted() {
     this.modifiableOrder = this.$parent.$options.propsData?.modifiableOrder
-    this.text = this.value
+    this.text = this.label
 
     if (this.selective) {
       this.registerSelectiveEvents()
@@ -152,7 +152,7 @@ export default class FluidButton extends Advanced {
     }
   }
 
-  destroyed() {
+  beforeDestroy() {
     this.removeSelectiveEvents()
     this.removeMarkersEvents()
   }
@@ -181,17 +181,17 @@ export default class FluidButton extends Advanced {
         this.text = this.triggers[side].name
         this.updateSliderWidth()
       } else {
-        this.text = this.value
+        this.text = this.label
       }
     })
   }
 
   deselect() {
-    if (this.text == this.value) return
+    if (this.text == this.label) return
 
     if (!this.triggers[this.currentSide]?.message) {
       this.throughFade().then(() => {
-        this.text = this.value
+        this.text = this.label
       })
     }
 
@@ -200,12 +200,12 @@ export default class FluidButton extends Advanced {
 
   throughFade() {
     return new Promise(resolve => {
-      const valueNode = this.$('.fluid-button_slider_value')
+      const labelNode = this.$('.fluid-button_slider_label')
 
-      valueNode.style.opacity = 0
+      labelNode.style.opacity = 0
 
       setTimeout(() => {
-        valueNode.style.opacity = 1
+        labelNode.style.opacity = 1
         resolve()
       }, this.fadeDuration * 2)
     })
@@ -218,7 +218,7 @@ export default class FluidButton extends Advanced {
       setTimeout(() => {
         if (this.text == text) {
           this.throughFade().then(() => {
-            this.text = this.value
+            this.text = this.label
           })
         }
       }, 1000)
@@ -281,9 +281,9 @@ export default class FluidButton extends Advanced {
         }
       }, 300)
 
-      if (this.text != this.value) {
+      if (this.text != this.label) {
         this.throughFade().then(() => {
-          this.text = this.value
+          this.text = this.label
         })
       }
     }
@@ -347,12 +347,12 @@ export default class FluidButton extends Advanced {
 
     if (!this.triggers.right) {
       this.triggers.right = {
-        name: this.value,
+        name: this.label,
         action: this.action,
       }
     } else if (!this.triggers.left) {
       this.triggers.left = {
-        name: this.value,
+        name: this.label,
         action: this.action,
       }
     }
@@ -416,7 +416,7 @@ export default class FluidButton extends Advanced {
     align-items: center;
     transition: width 0.23s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    &_value {
+    &_label {
       z-index: 2;
       padding: 5px 10px;
       user-select: none;

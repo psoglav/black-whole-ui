@@ -24,10 +24,10 @@
             },
           },
         }"
-        value="Sizable profile"
+        label="Sizable profile"
       />
-      <fluid-button value="Members" />
-      <fluid-button value="Hiring" />
+      <fluid-button label="Members" />
+      <fluid-button label="Hiring" />
     </fluid-buttons-group>
   </div>
 </template>

@@ -15,13 +15,13 @@
       <card title="Time for traveling to Zimbabua" />
       <card title="Time" />
       <card title="Work">
-        <fluid-button value="Orders" />
-        <fluid-button value="Orders" />
-        <fluid-button value="Prices" />
-        <fluid-button value="Orders" />
-        <fluid-button value="Orders" />
-        <fluid-button value="Prices" />
-        <fluid-button value="Direct" />
+        <fluid-button label="Orders" />
+        <fluid-button label="Orders" />
+        <fluid-button label="Prices" />
+        <fluid-button label="Orders" />
+        <fluid-button label="Orders" />
+        <fluid-button label="Prices" />
+        <fluid-button label="Direct" />
       </card>
       <card title="Time" />
       <card title="Time" />
