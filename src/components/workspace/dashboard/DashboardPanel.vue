@@ -15,7 +15,7 @@
       <card title="Time for traveling to Zimbabua" />
       <card title="Shit" />
       <card title="Happens">
-        <fluid-button label="Orders" />
+        <fluid-button disabled label="Orders" />
         <fluid-button label="Prices" />
         <fluid-button label="Bisquit" />
         <fluid-button label="Plate" />

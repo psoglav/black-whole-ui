@@ -11,10 +11,9 @@ import { Component, Vue } from 'vue-property-decorator'
   name: 'cards-pocket',
 })
 export default class CardsPocket extends Vue {
-
   created() {
-    this.$root.$on('card-detached', this.onCardDetached)
-    this.$root.$on('card-inserted', this.onCardInserted)
+    // this.$root.$on('card-detached', this.onCardDetached)
+    // this.$root.$on('card-inserted', this.onCardInserted)
   }
 
   mounted() {
@@ -22,17 +21,13 @@ export default class CardsPocket extends Vue {
   }
 
   beforeDestroy() {
-    this.$root.$off('card-detached', this.onCardDetached)
-    this.$root.$off('card-inserted', this.onCardInserted)
+    // this.$root.$off('card-detached', this.onCardDetached)
+    // this.$root.$off('card-inserted', this.onCardInserted)
   }
 
-  onCardDetached(id) {
-    // console.log(id)
-  }
+  // onCardDetached() {}
 
-  onCardInserted(id) {
-    // console.log(id)
-  }
+  // onCardInserted() {}
 }
 </script>
 
@@ -50,5 +45,4 @@ export default class CardsPocket extends Vue {
   background-color: $background;
   overflow: auto;
 }
-
 </style>

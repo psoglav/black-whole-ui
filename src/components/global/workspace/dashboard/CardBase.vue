@@ -11,7 +11,7 @@
     >
       <div
         class="card_slot-movable"
-        :class="{ 'ready-to-leave': readyRemove }"
+        :class="{ 'ready-to-leave': readyToLeave }"
         :id="id"
       >
         <div class="card_slot-movable_header" :style="movableHeaderStyle">
@@ -38,7 +38,9 @@ import { Component, Watch } from 'vue-property-decorator'
 import { customAlphabet } from 'nanoid'
 
 import Advanced from '@/mixins/advanced-component'
-import { Log } from '@/services/decorators'
+// import { Log } from '@/services/decorators'
+
+/* eslint-disable */
 
 @Component({
   name: 'card',
@@ -68,9 +70,9 @@ export default class CardBase extends Advanced {
   }
 
   mouseLeaveHandler() {
-    if (this.readyRemove) {
+    if (this.readyToLeave) {
       this.$root.$emit('card-unfocused', this.id)
-      this.readyRemove = false
+      this.readyToLeave = false
     }
   }
 
@@ -88,7 +90,7 @@ export default class CardBase extends Advanced {
 
   moving = false
   elseCardIsMoving = false
-  readyRemove = false
+  readyToLeave = false
   scrolling = false
   movementDenied = false
   needInUpdate = false
@@ -162,6 +164,7 @@ export default class CardBase extends Advanced {
 
   elseCardInserted(id) {
     this.elseCardIsMoving = false
+    this.readyToLeave = false
     this.updateHeaderBehaviour()
 
     if (this.id == id) {
@@ -196,30 +199,26 @@ export default class CardBase extends Advanced {
 
   readyToReplace(id) {
     if (this.moving && this.id != id) {
-      // this.setBindings()
       this.removeMovableReplacements()
 
       let replacement = document.querySelector(
         '.card_slot-movable#' + id,
       ) as any
+
       this.replacementNode = replacement
       replacement = replacement.cloneNode(true)
       replacement.classList.remove('ready-to-leave')
-      // replacement.classList.add('hidden')
       replacement.style = {}
 
       this.bindings.movable.id = replacement.id // swap ids
       replacement.id = this.id
 
-      // setTimeout(() => {
-      //   replacement.classList.remove('hidden')
-        replacement.classList.add('ready-to-join')
-      // }, 5)
+      replacement.classList.add('ready-to-join')
 
       this.bindings.slot.appendChild(replacement)
     }
 
-    this.readyRemove = this.id == id && this.elseCardIsMoving && !this.moving
+    this.readyToLeave = this.id == id && this.elseCardIsMoving && !this.moving
   }
 
   readyCardUnfocused() {
@@ -252,7 +251,9 @@ export default class CardBase extends Advanced {
       bs.slot.appendChild(bs.movable)
     }
 
+    this.updateCursor()
     this.$root.$emit('card-inserted', this.id)
+    this.$store.commit('ACTIVATE_INPUT')
   }
 
   detachCard() {
@@ -267,8 +268,8 @@ export default class CardBase extends Advanced {
 
     this.setBindings()
 
-    this.dx = this.mx - bs.movableRect.x
-    this.dy = this.my - bs.movableRect.y
+    this.dx = this.mx - bs.cardRect.x
+    this.dy = this.my - bs.cardRect.y
     this.startYScroll = this.$parent.$el.scrollTop
 
     bs.movable.style.width = bs.slot.clientWidth + 'px'
@@ -280,24 +281,22 @@ export default class CardBase extends Advanced {
     bs.movable.style.top = this.starty + 'px'
 
     this.$root.$emit('card-detached', this.id)
+    this.$store.commit('DEACTIVATE_INPUT')
   }
 
-  // FIX: doesnt work properly because of pointer-events turned off
   updateCursor() {
     let cursorStyle
 
     switch (this.cardConfig.cursorGrabStyle) {
       case 1:
-        cursorStyle = this.moving ? 'move' : 'pointer'
+        cursorStyle = this.moving ? 'move' : ''
         break
       case 2:
-        cursorStyle = this.moving ? 'grabbing' : 'grab'
+        cursorStyle = this.moving ? 'grabbing' : ''
         break
     }
 
-    this.bindings.header.style.cursor = cursorStyle
-    this.bindings.dots.style.cursor = cursorStyle
-    // document.body.style.cursor = cursorStyle
+    this.bindings.app.style.cursor = cursorStyle
   }
 
   getIndex(el) {

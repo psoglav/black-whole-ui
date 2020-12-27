@@ -1,5 +1,9 @@
 <template>
-  <div class="fluid-button" @click="action">
+  <div
+    class="fluid-button"
+    :class="{ disabled: disabled || deactivated }"
+    @click="action"
+  >
     <div class="fluid-button_slider" :class="{ selective }">
       <h3 class="fluid-button_slider_label">
         <fa icon="bullhorn" v-if="messageIsVisible" /> {{ text || label }}
@@ -28,10 +32,12 @@
 <script>
 import * as math from 'mathjs'
 import { Component } from 'vue-property-decorator'
-
 import Advanced from '@/mixins/advanced-component'
 
+import { mapGetters } from 'vuex'
+
 @Component({
+  name: 'fluid-button',
   props: {
     label: {
       type: String,
@@ -82,8 +88,16 @@ import Advanced from '@/mixins/advanced-component'
       default: '50%',
     },
     message: String,
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
   },
-  name: 'fluid-button',
+  computed: {
+    ...mapGetters({
+      deactivated: 'input-deactivated'
+    })
+  }
 })
 export default class FluidButton extends Advanced {
   get selective() {
@@ -158,6 +172,8 @@ export default class FluidButton extends Advanced {
   }
 
   action(side) {
+    if (this.disabled || this.deactivated) return
+
     if (typeof side == 'string') {
       const message = this.triggers[side].message
 
@@ -373,23 +389,28 @@ export default class FluidButton extends Advanced {
   justify-content: center;
   cursor: pointer;
 
-  &:hover &_slider {
+  &.disabled {
+    cursor: inherit;
+    opacity: 0.65;
+  }
+
+  &:hover:not(.disabled) &_slider {
     color: white;
   }
 
-  &:active {
+  &:active:not(.disabled) {
     transition: box-shadow 0.5s;
     box-shadow: inset 0 0 20px #ffffff33;
     cursor: pointer;
   }
 
-  &:hover &_slider_back {
+  &:hover:not(.disabled) &_slider_back {
     background-color: white;
     opacity: 0.4;
     transform: scale(1);
   }
 
-  &:active &_slider_back {
+  &:active:not(.disabled) &_slider_back {
     background-color: #ffffff00;
     box-shadow: inset 0 0 10px white;
     opacity: 0.5;
@@ -400,11 +421,11 @@ export default class FluidButton extends Advanced {
     box-shadow: inset 0 0 0px white;
   }
 
-  &:hover &_slider_back.dissolution {
+  &:hover:not(.disabled) &_slider_back.dissolution {
     box-shadow: inset 0 0 40px white;
   }
 
-  &:active &_slider_back.dissolution {
+  &:active:not(.disabled) &_slider_back.dissolution {
     box-shadow: inset 0 0 40px white;
   }
 

@@ -1,6 +1,6 @@
 <template>
-  <div class="panel">
-    <div class="panel_resize"></div>
+  <div class="profile-panel">
+    <div class="profile-panel_resize"></div>
   </div>
 </template>
 
@@ -50,7 +50,7 @@ export default class ProfilePanel extends Vue {
   handleMouseDown(e) {
     if (!this.workspaceConfig.panels.profile.sizable) return
 
-    if (e.target.classList && e.target.classList.contains('panel_resize')) {
+    if (e.target.classList && e.target.classList.contains('profile-panel_resize')) {
       this.resizing = true
     }
   }
@@ -61,7 +61,7 @@ export default class ProfilePanel extends Vue {
     if (this.resizing) {
       this.resize(e.x)
     } else {
-      if (e.target.classList && e.target.classList.contains('panel_resize')) {
+      if (e.target.classList && e.target.classList.contains('profile-panel_resize')) {
         document.body.style.cursor = 'col-resize'
       } else {
         document.body.style.cursor = 'default'
@@ -98,7 +98,7 @@ export default class ProfilePanel extends Vue {
 <style lang="scss" scoped>
 @import '@/scss/_variables.scss';
 
-.panel {
+.profile-panel {
   position: relative;
   grid-area: profile;
   width: 100%;
