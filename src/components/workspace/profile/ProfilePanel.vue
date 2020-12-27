@@ -31,7 +31,7 @@ export default class ProfilePanel extends Vue {
   resize(x) {
     const screenw = window.innerWidth
     const pixels = screenw - x
-    const rem = pixels / 16
+    const rem = pixels / 14
 
     let minDashboardWidth = this.workspaceConfig.panels.dashboard['min-width']
     let navigationWidth = this.workspaceConfig.panels.navigation.width
@@ -42,9 +42,9 @@ export default class ProfilePanel extends Vue {
     navigationWidth = +navigationWidth.replace('rem', '')
 
     if (rem < minProfileWidth) return
-    else if ((navigationWidth + minDashboardWidth) * 16 > x) return
+    else if ((navigationWidth + minDashboardWidth) * 14 > x) return
 
-    this.workspaceConfig.panels.profile.width = rem + 'rem'
+    this.$store.commit('SET_PROFILE_WIDTH', rem)
   }
 
   handleMouseDown(e) {

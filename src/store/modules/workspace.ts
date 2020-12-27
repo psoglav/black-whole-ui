@@ -24,6 +24,12 @@ const state = {
   } as WorkspaceConfig,
 }
 
+const mutations = {
+  SET_PROFILE_WIDTH(state, rem) {
+    state.config.panels.profile.width = rem + 'rem'
+  }
+}
+
 const getters = {
   workspaceConfig: state => state.config,
 }
@@ -31,4 +37,5 @@ const getters = {
 export default {
   state,
   getters,
+  mutations
 }
