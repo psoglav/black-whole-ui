@@ -27,11 +27,11 @@ export default class CardsPocket extends Vue {
   }
 
   onCardDetached(id) {
-    console.log(id)
+    // console.log(id)
   }
 
   onCardInserted(id) {
-    console.log(id)
+    // console.log(id)
   }
 }
 </script>

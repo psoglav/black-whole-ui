@@ -9,24 +9,23 @@
       <card title="Diargam" />
       <card title="Lorem" />
       <card title="Ipsum" />
-      <card title="Time" />
-      <card title="Time" />
-      <card title="Time" />
+      <card title="Pickle" />
+      <card title="Move" />
+      <card title="Bucket" />
       <card title="Time for traveling to Zimbabua" />
-      <card title="Time" />
-      <card title="Work">
-        <fluid-button label="Orders" />
-        <fluid-button label="Orders" />
-        <fluid-button label="Prices" />
-        <fluid-button label="Orders" />
+      <card title="Shit" />
+      <card title="Happens">
         <fluid-button label="Orders" />
         <fluid-button label="Prices" />
+        <fluid-button label="Bisquit" />
+        <fluid-button label="Plate" />
+        <fluid-button label="Honor" />
         <fluid-button label="Direct" />
       </card>
-      <card title="Time" />
-      <card title="Time" />
-      <card title="Time" />
-      <card title="Time" />
+      <card title="Bear" />
+      <card title="Pearer" />
+      <card title="Urban" />
+      <card title="Milk" />
     </cards-pocket>
   </div>
 </template>

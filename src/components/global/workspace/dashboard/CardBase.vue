@@ -5,7 +5,10 @@
     @mouseleave="mouseLeaveHandler"
   >
     <div class="card_back"></div>
-    <div :class="['card_slot', 'parent_' + id]">
+    <div
+      class="card_slot"
+      :class="{ ['parent_' + id]: true, deactivated: elseCardIsMoving }"
+    >
       <div
         class="card_slot-movable"
         :class="{ 'ready-to-leave': readyRemove }"
@@ -13,10 +16,7 @@
       >
         <div class="card_slot-movable_header" :style="movableHeaderStyle">
           <div class="card_slot-movable_header_title">{{ title }}</div>
-          <div
-            class="card_slot-movable_header_dots"
-            :class="{ active: moving }"
-          >
+          <div class="card_slot-movable_header_dots">
             <div></div>
             <div></div>
             <div></div>
@@ -143,12 +143,14 @@ export default class CardBase extends Advanced {
 
   setBindings() {
     const movable = document.querySelector(`.card_slot-movable#${this.id}`)
+    const header = movable.querySelector('.card_slot-movable_header')
+
     const set = {
       card: this.$el,
       slot: this.$('.card_slot'),
       movable,
-      header: this.$('.card_slot-movable_header'),
-      dots: this.$('.card_slot-movable_header_dots'),
+      header,
+      dots: header.querySelector('.card_slot-movable_header_dots'),
       app: document.querySelector('#app'),
       workspace: document.querySelector('.workspace'),
       movableRect: movable.getBoundingClientRect(),
@@ -158,12 +160,21 @@ export default class CardBase extends Advanced {
     this.bindings = set
   }
 
-  elseCardInserted() {
+  elseCardInserted(id) {
     this.elseCardIsMoving = false
+    this.updateHeaderBehaviour()
+
+    if (this.id == id) {
+      this.bindings.dots.classList.remove('active')
+    }
   }
 
-  elseCardDetached() {
+  elseCardDetached(id) {
     this.elseCardIsMoving = true
+
+    if (this.id == id) {
+      this.bindings.dots.classList.add('active')
+    }
   }
 
   removeMovableReplacements() {
@@ -185,86 +196,69 @@ export default class CardBase extends Advanced {
 
   readyToReplace(id) {
     if (this.moving && this.id != id) {
+      // this.setBindings()
       this.removeMovableReplacements()
 
-      let replacement = document.querySelector('.card_slot-movable#' + id)
+      let replacement = document.querySelector(
+        '.card_slot-movable#' + id,
+      ) as any
       this.replacementNode = replacement
-      replacement = replacement.cloneNode(true) as Element
+      replacement = replacement.cloneNode(true)
       replacement.classList.remove('ready-to-leave')
-      replacement.classList.add('hidden')
+      // replacement.classList.add('hidden')
+      replacement.style = {}
 
-      setTimeout(() => {
-        replacement.classList.remove('hidden')
+      this.bindings.movable.id = replacement.id // swap ids
+      replacement.id = this.id
+
+      // setTimeout(() => {
+      //   replacement.classList.remove('hidden')
         replacement.classList.add('ready-to-join')
-      }, 5)
+      // }, 5)
 
       this.bindings.slot.appendChild(replacement)
-    } else {
-      // removing replacement when we're being back to our slot
-      this.replacementNode = null
     }
 
     this.readyRemove = this.id == id && this.elseCardIsMoving && !this.moving
   }
 
   readyCardUnfocused() {
-    const existing = this.$el.querySelector('.ready-to-join')
-
-    if (existing) {
-      existing.classList.remove('ready-to-join')
-      existing.classList.add('hidden')
-    }
+    this.removeMovableReplacements()
+    this.replacementNode = null
   }
 
   insertCard() {
     const bs = this.bindings
 
-    this.$root.$emit('card-inserted', this.id)
-
-    this.mx = 0
-    this.my = 0
-    this.dx = 0
-    this.dy = 0
+    bs.movable.style = {}
 
     if (this.replacementNode) {
+      // we have chosen replacement
       const replacementParent = this.replacementNode.parentNode
-
-      const replacementId = replacementParent.classList[1].split('_')[1]
-
-      bs.movable.id = replacementId
-      this.replacementNode.id = this.id
-      replacementParent.removeChild(this.replacementNode)
-      replacementParent.appendChild(bs.movable)
-      this.replacementNode = null
-
       const replacementMovableClone = this.$el.querySelector(
         '.ready-to-join',
       ) as any
 
+      replacementParent.removeChild(this.replacementNode) // remove the replacement from parent
+      replacementParent.appendChild(bs.movable) // and append our movable to it
+
+      this.replacementNode = null
+
       replacementMovableClone.classList.remove('ready-to-join')
+      replacementMovableClone.style = {}
     } else {
-      this.removeMovableReplacements()
-      bs.movable.style = {}
+      // otherwise bring the movable one back
+      bs.movable.id = this.id
       bs.slot.appendChild(bs.movable)
     }
 
-    this.setBindings()
-
-    bs.movable.style.transition = 'transform .3s, box-shadow .3s'
-    bs.movable.style.top = ''
-    bs.movable.style.left = ''
-    bs.movable.style['z-index'] = 1
-    bs.movable.style['pointer-events'] = 'all'
-    bs.movable.style.transform = ''
-    bs.movable.style.width = '100%'
+    this.$root.$emit('card-inserted', this.id)
   }
 
   detachCard() {
     const bs = this.bindings
 
-    this.$root.$emit('card-detached', this.id)
-
-    this.updateStartPosition()
+    this.fitParentPosition()
     this.updateCursor()
 
     // detaching movable element from this card slot
@@ -284,6 +278,8 @@ export default class CardBase extends Advanced {
     bs.movable.style.transform = 'scale(1.03)'
     bs.movable.style.left = this.startx + 'px'
     bs.movable.style.top = this.starty + 'px'
+
+    this.$root.$emit('card-detached', this.id)
   }
 
   // FIX: doesnt work properly because of pointer-events turned off
@@ -321,7 +317,7 @@ export default class CardBase extends Advanced {
     this.bindings.movable.style.left = x + 'px'
   }
 
-  updateStartPosition() {
+  fitParentPosition() {
     this.setBindings()
 
     this.startx = this.bindings.cardRect.x
@@ -350,16 +346,36 @@ export default class CardBase extends Advanced {
     }
   }
 
+  headerClickHandler(e) {
+    if (!this.movementDenied && e.button == 0) {
+      this.mx = e.x
+      this.my = e.y
+      this.moving = true
+    } else {
+      this.moving = false
+    }
+  }
+
+  updateHeaderBehaviour() {
+    this.removeHeaderEvent()
+    this.setBindings()
+    this.registerHeaderEvent()
+    this.bindings.dots.classList.remove('active')
+  }
+
+  removeHeaderEvent() {
+    this.bindings.header.removeEventListener(
+      'mousedown',
+      this.headerClickHandler,
+    )
+  }
+
+  registerHeaderEvent() {
+    this.bindings.header.addEventListener('mousedown', this.headerClickHandler)
+  }
+
   registerEvents() {
-    this.bindings.header.addEventListener('mousedown', e => {
-      if (!this.movementDenied && e.button == 0) {
-        this.mx = e.x
-        this.my = e.y
-        this.moving = true
-      } else {
-        this.moving = false
-      }
-    })
+    this.registerHeaderEvent()
 
     document.addEventListener('mousemove', e => {
       if (this.moving) {
@@ -400,6 +416,10 @@ $height: 300px;
   }
 
   &_slot {
+    &.deactivated {
+      pointer-events: none;
+    }
+
     &-movable {
       position: absolute;
       width: 100%;
