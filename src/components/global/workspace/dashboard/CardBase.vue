@@ -8,7 +8,7 @@
     <div :class="['card_slot', 'parent_' + id]">
       <div
         class="card_slot-movable"
-        :class="{ 'ready-remove': readyRemove }"
+        :class="{ 'ready-to-leave': readyRemove }"
         :id="id"
       >
         <div class="card_slot-movable_header" :style="movableHeaderStyle">
@@ -167,7 +167,7 @@ export default class CardBase extends Advanced {
   }
 
   removeMovableReplacements() {
-    const existing = this.$el.querySelectorAll('.ready-append')
+    const existing = this.$el.querySelectorAll('.ready-to-join')
     const hiddenExisting = this.$el.querySelectorAll('.hidden')
 
     if (existing.length) {
@@ -190,37 +190,28 @@ export default class CardBase extends Advanced {
       let replacement = document.querySelector('.card_slot-movable#' + id)
       this.replacementNode = replacement
       replacement = replacement.cloneNode(true) as Element
-      replacement.classList.remove('ready-remove')
+      replacement.classList.remove('ready-to-leave')
       replacement.classList.add('hidden')
 
       setTimeout(() => {
         replacement.classList.remove('hidden')
-        replacement.classList.add('ready-append')
+        replacement.classList.add('ready-to-join')
       }, 5)
 
       this.bindings.slot.appendChild(replacement)
+    } else {
+      // removing replacement when we're being back to our slot
+      this.replacementNode = null
     }
 
-    // turn it off on unfocused cards
-    this.readyRemove = false
-
-    if (
-      this.id != id || // when it's the same card
-      !this.elseCardIsMoving || // when no cards is being moved
-      (this.id == id && this.moving) // when it's the card which user is moving
-    ) {
-      return
-    }
-
-    // and opposite on focused card
-    this.readyRemove = true
+    this.readyRemove = this.id == id && this.elseCardIsMoving && !this.moving
   }
 
   readyCardUnfocused() {
-    const existing = this.$el.querySelector('.ready-append')
+    const existing = this.$el.querySelector('.ready-to-join')
 
     if (existing) {
-      existing.classList.remove('ready-append')
+      existing.classList.remove('ready-to-join')
       existing.classList.add('hidden')
     }
   }
@@ -235,27 +226,25 @@ export default class CardBase extends Advanced {
     this.dx = 0
     this.dy = 0
 
-    // this.updateStartPosition()
-
-    // this.movementDenied = true
-
     if (this.replacementNode) {
       const replacementParent = this.replacementNode.parentNode
 
-      const thisId = this.id
       const replacementId = replacementParent.classList[1].split('_')[1]
 
       bs.movable.id = replacementId
-      this.replacementNode.id = thisId
+      this.replacementNode.id = this.id
       replacementParent.removeChild(this.replacementNode)
       replacementParent.appendChild(bs.movable)
       this.replacementNode = null
 
-      const replacementMovableClone = this.$el.querySelector('.ready-append')
+      const replacementMovableClone = this.$el.querySelector(
+        '.ready-to-join',
+      ) as any
 
-      replacementMovableClone.classList.remove('ready-append')
-      // this.removeMovableReplacements()
+      replacementMovableClone.classList.remove('ready-to-join')
     } else {
+      this.removeMovableReplacements()
+      bs.movable.style = {}
       bs.slot.appendChild(bs.movable)
     }
 
@@ -419,20 +408,15 @@ $height: 300px;
       border-radius: 5px;
       backdrop-filter: blur(10px);
 
-      &.ready-remove {
-        // opacity: 0.65;
-        // filter: blur(5px);
-        // backdrop-filter: none;
+      &.ready-to-leave {
         transform: translateY(10%);
       }
 
-      &.ready-append {
-        // opacity: 0.65;
+      &.ready-to-join {
         transform: translateY(-90%);
       }
 
       &.hidden {
-        // // opacity: 0.65;
         transform: translateY(-100%);
       }
 
